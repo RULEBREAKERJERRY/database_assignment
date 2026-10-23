@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.shortvideo.statistics.StatisticsMapper">
+    <select id="userStatistics" resultType="map">
+        SELECT
+          (SELECT COUNT(*) FROM follow_relations WHERE followed_id=#{userId}) AS follower_count,
+          (SELECT COUNT(*) FROM follow_relations WHERE follower_id=#{userId}) AS following_count,
+          (SELECT COUNT(*) FROM videos WHERE author_id=#{userId} AND status='PUBLISHED') AS published_video_count,
+          (SELECT COUNT(*) FROM video_likes l JOIN videos v ON v.id=l.video_id
+             WHERE v.author_id=#{userId} AND v.status='PUBLISHED') AS received_like_count,
+          (SELECT COUNT(*) FROM video_favorites f JOIN videos v ON v.id=f.video_id
+             WHERE v.author_id=#{userId} AND v.status='PUBLISHED') AS received_favorite_count,
+          (SELECT COUNT(*) FROM play_records p JOIN videos v ON v.id=p.video_id
+             WHERE v.author_id=#{userId} AND v.status='PUBLISHED') AS received_play_count,
+          (SELECT COUNT(*) FROM share_records s JOIN videos v ON v.id=s.video_id
+             WHERE v.author_id=#{userId} AND v.status='PUBLISHED') AS received_share_count,
+          (SELECT COUNT(*) FROM comments c JOIN videos v ON v.id=c.video_id
+             WHERE v.author_id=#{userId} AND v.status='PUBLISHED' AND c.is_deleted=FALSE) AS received_comment_count,
+          (SELECT COUNT(*) FROM play_records WHERE user_id=#{userId}) AS active_play_count,
+          (SELECT COUNT(*) FROM video_likes WHERE user_id=#{userId}) AS active_like_count,
+          (SELECT COUNT(*) FROM video_favorites WHERE user_id=#{userId}) AS active_favorite_count,
+          (SELECT COUNT(*) FROM share_records WHERE user_id=#{userId}) AS active_share_count,
+          (SELECT COUNT(*) FROM comments WHERE user_id=#{userId} AND is_deleted=FALSE) AS active_comment_count
+    </select>
+</mapper>
+

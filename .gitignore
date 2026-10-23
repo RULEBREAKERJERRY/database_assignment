@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+.DS_Store
+.env
+backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+storage/videos/*
+!storage/videos/.gitkeep
+!storage/videos/sample-demo.mp4
+!storage/videos/README.md

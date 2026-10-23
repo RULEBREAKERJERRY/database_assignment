@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.shortvideo.video.VideoMapper">
+    <sql id="videoColumns">
+        v.id, v.author_id, u.nickname AS author_name, v.category_id,
+        vc.name AS category_name, v.title, v.description, v.file_path,
+        v.status, v.published_at, v.deleted_at,
+        s.current_like_count, s.current_favorite_count, s.play_count,
+        s.unique_viewer_count, s.share_count, s.valid_comment_count
+    </sql>
+
+    <select id="list" resultType="map">
+        SELECT <include refid="videoColumns"/>
+        FROM videos v
+        JOIN users u ON u.id = v.author_id
+        JOIN video_categories vc ON vc.id = v.category_id
+        JOIN v_video_statistics s ON s.video_id = v.id
+        <where>
+            <if test="!includeDeleted">v.status = 'PUBLISHED'</if>
+            <if test="keyword != null and keyword != ''">
+                AND v.title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="authorId != null">AND v.author_id = #{authorId}</if>
+            <if test="categoryId != null">AND v.category_id = #{categoryId}</if>
+        </where>
+        ORDER BY v.published_at DESC, v.id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM videos v
+        <where>
+            <if test="!includeDeleted">v.status = 'PUBLISHED'</if>
+            <if test="keyword != null and keyword != ''">
+                AND v.title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="authorId != null">AND v.author_id = #{authorId}</if>
+            <if test="categoryId != null">AND v.category_id = #{categoryId}</if>
+        </where>
+    </select>
+
+    <select id="detail" resultType="map">
+        SELECT <include refid="videoColumns"/>
+        FROM videos v
+        JOIN users u ON u.id = v.author_id
+        JOIN video_categories vc ON vc.id = v.category_id
+        JOIN v_video_statistics s ON s.video_id = v.id
+        WHERE v.id = #{id}
+        <if test="!includeDeleted">AND v.status = 'PUBLISHED'</if>
+    </select>
+</mapper>
+

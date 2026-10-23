@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: short-video-mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-short_video}
+      MYSQL_USER: ${MYSQL_USER:-shortvideo}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shortvideo_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev}
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/02_indexes.sql:/docker-entrypoint-initdb.d/02_indexes.sql:ro
+      - ./database/03_views.sql:/docker-entrypoint-initdb.d/03_views.sql:ro
+      - ./database/04_seed.sql:/docker-entrypoint-initdb.d/04_seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql_data:
+
