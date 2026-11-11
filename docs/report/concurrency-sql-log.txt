@@ -1,0 +1,12 @@
+step
+--- 实验对象 ---
+video_id	title	status	author_id	username
+16885	并发实验专用视频	PUBLISHED	2250	concurrency_tester
+step
+--- 1. 已删除视频上直接 INSERT 点赞：数据库层不会报错 ---
+like_rows_on_deleted_video
+1
+step
+--- 2. 回滚后确认没有残留 ---
+like_rows_after_rollback
+0

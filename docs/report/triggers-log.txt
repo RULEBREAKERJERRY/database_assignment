@@ -1,0 +1,20 @@
+step
+--- 1. 逻辑删除：触发器应写入一条 DELETE 审计 ---
+video_id	action	old_status	new_status	changed_at
+1	DELETE	PUBLISHED	DELETED	2026-11-11 14:44:33.490
+step
+--- 2. 回滚后审计同样回滚（触发器在同一事务内）---
+audit_rows_after_rollback
+0
+step
+--- 3. 只改标题不产生审计 ---
+audit_rows_after_title_change
+0
+step
+--- 4. 触发器清单 ---
+TRIGGER_NAME	ACTION_TIMING	EVENT_MANIPULATION	EVENT_OBJECT_TABLE
+trg_videos_audit_status	AFTER	UPDATE	videos
+trg_videos_prevent_restore	BEFORE	UPDATE	videos
+step
+--- 5. 已删除作品不允许恢复：最后一条语句，预期报 ERROR 1644 (45000) ---
+ERROR 1644 (45000) at line 98: 已逻辑删除的作品不允许恢复为发布状态

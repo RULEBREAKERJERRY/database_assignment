@@ -73,15 +73,17 @@ public class InteractionService {
     }
 
     public Map<String, Boolean> currentState(Long videoId) {
-        Long userId = SecurityUtils.currentUserId();
         Map<String, Boolean> state = new LinkedHashMap<>();
-        state.put("liked", interactionMapper.hasLiked(userId, videoId) > 0);
-        state.put("favorited", interactionMapper.hasFavorited(userId, videoId) > 0);
+        Long userId = SecurityUtils.currentUserIdOrNull();
+        // 该接口允许匿名访问（视频详情页未登录也要能打开），
+        // 未登录时直接返回 false，而不是让 currentUserId() 抛 403 变成 500。
+        state.put("liked", userId != null && interactionMapper.hasLiked(userId, videoId) > 0);
+        state.put("favorited", userId != null && interactionMapper.hasFavorited(userId, videoId) > 0);
         return state;
     }
 
     private Video assertInteractive(Long videoId) {
-        Video video = videoMapper.lockById(videoId);
+        Video video = videoMapper.shareLockById(videoId);
         if (video == null || !"PUBLISHED".equals(video.getStatus())) {
             throw BusinessException.badRequest("视频不存在或已删除，不能新增互动");
         }

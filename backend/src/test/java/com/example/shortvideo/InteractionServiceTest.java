@@ -43,7 +43,7 @@ class InteractionServiceTest {
         Video video = new Video();
         video.setId(9L);
         video.setStatus("DELETED");
-        when(videoMapper.lockById(9L)).thenReturn(video);
+        when(videoMapper.shareLockById(9L)).thenReturn(video);
 
         assertThrows(BusinessException.class, () -> service.play(9L, "request-1"));
         verifyNoInteractions(interactionMapper);
@@ -54,7 +54,7 @@ class InteractionServiceTest {
         Video video = new Video();
         video.setId(9L);
         video.setStatus("PUBLISHED");
-        when(videoMapper.lockById(9L)).thenReturn(video);
+        when(videoMapper.shareLockById(9L)).thenReturn(video);
         when(interactionMapper.addLike(7L, 9L)).thenReturn(0);
 
         service.like(9L, "request-2");

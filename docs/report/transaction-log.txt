@@ -1,0 +1,14 @@
+@actor := id
+3
+@vid := id
+1
+actor_bob	video
+3	1
+step
+--- 1. 成功路径：点赞关系与历史事件同时写入 ---
+like_rows	event_rows
+1	1
+step
+--- 2. 回滚路径：第二条 INSERT 违反 CHECK，整体回滚 ---
+like_rows	event_rows
+0	0

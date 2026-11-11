@@ -2,6 +2,7 @@ package com.example.shortvideo.video;
 
 import com.example.shortvideo.common.api.ApiResponse;
 import com.example.shortvideo.common.api.PageResult;
+import com.example.shortvideo.common.exception.BusinessException;
 import com.example.shortvideo.security.SecurityUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,12 @@ public class VideoController {
     public ApiResponse<Void> delete(@PathVariable Long id) {
         videoService.delete(id);
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/api/admin/videos/{id}/audit")
+    public ApiResponse<List<Map<String, Object>>> audit(@PathVariable Long id) {
+        if (!SecurityUtils.isAdmin()) throw BusinessException.forbidden("仅管理员可以查看审计记录");
+        return ApiResponse.ok(videoMapper.auditLog(id));
     }
 
     @Data

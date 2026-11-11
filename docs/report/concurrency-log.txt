@@ -1,0 +1,44 @@
+实验对象 video_id=16894，会话A 持锁 2s，会话B 在 0.4s 后发起
+
+===== 用例1 排他锁 vs 排他锁：两个删除请求互相排队 =====
+会话A: SELECT id FROM videos WHERE id=16894 FOR UPDATE
+会话B: SELECT id FROM videos WHERE id=16894 FOR UPDATE
+会话B 锁等待: 1592 ms
+阻塞期间 data_lock_waits 行数: 1
+会话B 结果: 16894 
+期望: 会话B 阻塞约 1.6s，说明同一行的 X 锁互斥
+
+===== 用例2 共享锁 vs 共享锁：并发互动不互相阻塞 =====
+会话A: SELECT id FROM videos WHERE id=16894 FOR SHARE
+会话B: SELECT id FROM videos WHERE id=16894 FOR SHARE
+会话B 锁等待: 0 ms
+阻塞期间 data_lock_waits 行数: 0
+会话B 结果: 16894 
+期望: 会话B 几乎立即返回，说明 S 锁之间兼容，热门视频的点赞不会被串行化
+
+===== 用例3 删除(持X锁) vs 新增互动(取S锁)：互动被挡在删除之后 =====
+会话A: UPDATE videos SET status='DELETED', deleted_at=NOW(3) WHERE id=16895
+会话B: SELECT status FROM videos WHERE id=16895 FOR SHARE
+会话B 锁等待: 1579 ms
+阻塞期间 data_lock_waits 行数: 1
+会话B 结果: DELETED 
+期望: 会话B 阻塞约 1.6s，随后读到 DELETED，应用层据此拒绝新增互动
+
+===== 用例4 新增互动(持S锁) vs 删除(要X锁)：删除等待在途互动结束 =====
+会话A: SELECT id FROM videos WHERE id=16896 FOR SHARE
+会话B: UPDATE videos SET status='DELETED', deleted_at=NOW(3) WHERE id=16896
+会话B 锁等待: 1576 ms
+阻塞期间 data_lock_waits 行数: 1
+会话B 结果: （无输出）
+期望: 会话B 阻塞约 1.6s，说明删除不会插队到正在写入的互动之前
+
+===== 用例5 对照：删除(持X锁) vs 普通快照读(不加锁) =====
+会话A: UPDATE videos SET status='DELETED', deleted_at=NOW(3) WHERE id=16897
+会话B: SELECT status FROM videos WHERE id=16897
+会话B 锁等待: 0 ms
+阻塞期间 data_lock_waits 行数: 0
+会话B 结果: PUBLISHED 
+期望: 会话B 立即返回旧值 PUBLISHED，说明普通读挡不住删除，必须显式加锁
+
+===== 清理 =====
+实验数据已清理，video_audit 中与实验视频相关的记录同步删除

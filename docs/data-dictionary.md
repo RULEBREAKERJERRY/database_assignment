@@ -135,6 +135,32 @@
 | `is_deleted` | BOOLEAN | `FALSE` |  | 逻辑删除标志 |
 | `deleted_at` | DATETIME(3) | 可空 | 与删除标志联合 CHECK | 删除时间 |
 
+## `video_audit` 作品状态审计
+
+由 `10_triggers.sql` 创建，记录 `videos.status` 的每一次迁移。**刻意不声明外键**：审计表的职责是"记录发生过什么"，若加 `FK → videos.id` 并沿用全库的 `RESTRICT`，一条有审计记录的视频将永远无法物理清理。
+
+| 字段 | 类型 | 空值/默认 | 键与约束 | 含义 |
+|---|---|---|---|---|
+| `id` | BIGINT UNSIGNED | 非空，自增 | PK | 审计编号 |
+| `video_id` | BIGINT UNSIGNED | 非空 | 索引（无外键） | 被修改的视频 |
+| `action` | VARCHAR(16) | 非空 | CHECK `PUBLISH/DELETE` | 动作类型 |
+| `old_status` | VARCHAR(16) | 非空 |  | 变更前状态 |
+| `new_status` | VARCHAR(16) | 非空 |  | 变更后状态 |
+| `old_deleted_at` | DATETIME(3) | 可空 |  | 变更前删除时间 |
+| `new_deleted_at` | DATETIME(3) | 可空 |  | 变更后删除时间 |
+| `changed_at` | DATETIME(3) | 当前时间 | 索引 | 记录时间 |
+
+索引：`idx_audit_video_time (video_id, changed_at DESC)`、`idx_audit_action_time (action, changed_at DESC)`。
+
+两个触发器：
+
+| 触发器 | 时机 | 作用 |
+|---|---|---|
+| `trg_videos_prevent_restore` | BEFORE UPDATE | `DELETED → PUBLISHED` 时 `SIGNAL SQLSTATE '45000'`，拒绝恢复 |
+| `trg_videos_audit_status` | AFTER UPDATE | `NEW.status <> OLD.status` 时写入一条审计 |
+
+`AFTER UPDATE` 触发器属于所在事务，业务回滚时审计记录一并回滚。
+
 ## `v_video_statistics` 普通视图
 
 每个视频一行，字段为 `video_id`、`current_like_count`、`current_favorite_count`、`play_count`、`unique_viewer_count`、`share_count`、`valid_comment_count`。视图从各明细表分别聚合后连接，避免多个一对多表直接连接导致计数相乘。

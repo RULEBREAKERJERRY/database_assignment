@@ -65,7 +65,14 @@ npm run dev
 
 ## 数据库脚本
 
-脚本用途与执行顺序见 [database/README.md](database/README.md)。核心内容包括：
+脚本用途与执行顺序见 [database/README.md](database/README.md)。一次性跑完全部脚本：
+
+```bash
+./scripts/init-database.sh          # 结构 + 种子 + 演示（01—06、10、11）
+./scripts/init-database.sh --perf   # 追加造数与性能/高级查询（07、08、09、12）
+```
+
+核心内容包括：
 
 - 主键、外键、唯一约束和 `CHECK` 约束
 - 当前关系与历史事件分离
@@ -74,6 +81,9 @@ npm run dev
 - 点赞成功与失败回滚演示
 - 100 用户、500 视频及至少 1 万行为的可重复数据脚本
 - 联合索引的 `EXPLAIN ANALYZE` 对比实验
+- `video_audit` 审计表与两个 `videos` 触发器
+- 两会话并发实验（`scripts/concurrency-test.sh`）
+- 窗口函数与递归 CTE 的关系分析查询
 
 ## 文件存储
 
@@ -87,5 +97,21 @@ npm run dev
 - 点赞、收藏、关注统计当前有效关系；播放和转发统计累计成功记录；评论统计未删除记录。
 - 播放、转发请求使用 `Idempotency-Key` 防止同一请求重试造成重复数据。
 
-更多设计说明见 [docs/database-design.md](docs/database-design.md)、[docs/data-dictionary.md](docs/data-dictionary.md) 和 [docs/test-and-acceptance.md](docs/test-and-acceptance.md)。
+## 文档
+
+| 文档 | 内容 |
+|---|---|
+| [docs/development-log.md](docs/development-log.md) | **开发文档**：三轮开发的过程、改动、验证、技术决策与踩坑记录 |
+| [docs/report/短视频数据管理系统-课程设计报告.md](docs/report/短视频数据管理系统-课程设计报告.md) | 课程设计报告（Word 版同目录 `.docx`） |
+| [docs/database-design.md](docs/database-design.md) | 设计原则、关系模式、统计口径、并发与触发器 |
+| [docs/data-dictionary.md](docs/data-dictionary.md) | 13 张表的完整字段说明 |
+| [docs/api.md](docs/api.md) | 接口清单与分页约定 |
+| [docs/test-and-acceptance.md](docs/test-and-acceptance.md) | 测试与验收清单 |
+
+报告与插图可用脚本重新生成（需 pandoc、python-docx、Pillow）：
+
+```bash
+python3 scripts/make_report_figures.py
+python3 scripts/build_report_docx.py
+```
 

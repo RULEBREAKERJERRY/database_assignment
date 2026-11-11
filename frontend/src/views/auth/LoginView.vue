@@ -51,6 +51,38 @@ async function submit() {
 </template>
 
 <style scoped>
-.auth-page{min-height:calc(100vh - 110px);display:grid;place-items:center;padding:40px 20px}.auth-card{width:min(850px,100%);display:grid;grid-template-columns:1fr 1fr;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 24px 80px rgba(32,44,38,.13)}.auth-visual{padding:55px;background:linear-gradient(145deg,#173d31,#254f41);color:#fff;display:flex;align-items:flex-end;min-height:520px}.auth-visual span{font-size:54px;color:#ed8a5d}.auth-visual h1{font-size:36px;line-height:1.3}.auth-visual p{opacity:.7}.auth-form{padding:52px}.auth-form h2{font-size:28px;margin:35px 0 24px}@media(max-width:700px){.auth-card{grid-template-columns:1fr}.auth-visual{display:none}.auth-form{padding:34px}}
+.auth-page {
+  min-height: calc(100vh - 110px);
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+}
+.auth-card {
+  width: min(850px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(32, 44, 38, .13);
+}
+.auth-visual {
+  padding: 55px;
+  background: linear-gradient(145deg, #173d31, #254f41);
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  min-height: 520px;
+}
+.auth-visual span { font-size: 54px; color: #ed8a5d }
+.auth-visual h1 { font-size: 36px; line-height: 1.3 }
+.auth-visual p { opacity: .7 }
+.auth-form { padding: 52px }
+.auth-form h2 { font-size: 28px; margin: 35px 0 24px }
+@media (max-width: 700px) {
+  .auth-card { grid-template-columns: 1fr }
+  .auth-visual { display: none }
+  .auth-form { padding: 34px }
+}
 </style>
 

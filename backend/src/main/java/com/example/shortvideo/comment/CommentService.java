@@ -33,7 +33,7 @@ public class CommentService {
     public Long create(Long videoId, String content) {
         if (!StringUtils.hasText(content)) throw BusinessException.badRequest("评论内容不能为空");
         if (content.trim().length() > 1000) throw BusinessException.badRequest("评论不能超过1000个字符");
-        Video video = videoMapper.lockById(videoId);
+        Video video = videoMapper.shareLockById(videoId);
         if (video == null || !"PUBLISHED".equals(video.getStatus())) {
             throw BusinessException.badRequest("视频不存在或已删除，不能评论");
         }
