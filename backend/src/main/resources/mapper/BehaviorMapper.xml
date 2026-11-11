@@ -1,67 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.shortvideo.behavior.BehaviorMapper">
-    <select id="query" resultType="map">
-        SELECT * FROM (
-          SELECT 'PLAY' behavior_type, p.user_id actor_user_id, actor.nickname actor_name,
-                 p.video_id, v.title video_title, v.author_id target_user_id,
-                 author.nickname target_name, p.started_at occurred_at, NULL detail
-          FROM play_records p
-          JOIN users actor ON actor.id=p.user_id
-          JOIN videos v ON v.id=p.video_id
-          JOIN users author ON author.id=v.author_id
-          UNION ALL
-          SELECT le.event_type, le.user_id, actor.nickname, le.video_id, v.title,
-                 v.author_id, author.nickname, le.occurred_at, NULL
-          FROM like_events le
-          JOIN users actor ON actor.id=le.user_id
-          JOIN videos v ON v.id=le.video_id
-          JOIN users author ON author.id=v.author_id
-          UNION ALL
-          SELECT fe.event_type, fe.user_id, actor.nickname, fe.video_id, v.title,
-                 v.author_id, author.nickname, fe.occurred_at, NULL
-          FROM favorite_events fe
-          JOIN users actor ON actor.id=fe.user_id
-          JOIN videos v ON v.id=fe.video_id
-          JOIN users author ON author.id=v.author_id
-          UNION ALL
-          SELECT 'SHARE', s.user_id, actor.nickname, s.video_id, v.title,
-                 v.author_id, author.nickname, s.shared_at, NULL
-          FROM share_records s
-          JOIN users actor ON actor.id=s.user_id
-          JOIN videos v ON v.id=s.video_id
-          JOIN users author ON author.id=v.author_id
-          UNION ALL
-          SELECT 'COMMENT', c.user_id, actor.nickname, c.video_id, v.title,
-                 v.author_id, author.nickname, c.created_at, c.content
-          FROM comments c
-          JOIN users actor ON actor.id=c.user_id
-          JOIN videos v ON v.id=c.video_id
-          JOIN users author ON author.id=v.author_id
-          UNION ALL
-          SELECT 'COMMENT_DELETE', c.user_id, actor.nickname, c.video_id, v.title,
-                 v.author_id, author.nickname, c.deleted_at, c.content
-          FROM comments c
-          JOIN users actor ON actor.id=c.user_id
-          JOIN videos v ON v.id=c.video_id
-          JOIN users author ON author.id=v.author_id
-          WHERE c.is_deleted=TRUE
-          UNION ALL
-          SELECT f.event_type, f.follower_id, actor.nickname, NULL, NULL,
-                 f.followed_id, target.nickname, f.occurred_at, NULL
-          FROM follow_events f
-          JOIN users actor ON actor.id=f.follower_id
-          JOIN users target ON target.id=f.followed_id
-        ) b
+
+    <!--
+      行为明细的统一数据源：把六类「当前表」与「历史事件表」纵向拼成一张宽表。
+      query 与 count 共用这一段，避免两处分页条件写法不一致导致「总数与列表对不上」。
+    -->
+    <sql id="behaviorSource">
+        SELECT 'PLAY' behavior_type, p.user_id actor_user_id, actor.nickname actor_name,
+               p.video_id, v.title video_title, v.author_id target_user_id,
+               author.nickname target_name, p.started_at occurred_at, NULL detail
+        FROM play_records p
+        JOIN users actor ON actor.id=p.user_id
+        JOIN videos v ON v.id=p.video_id
+        JOIN users author ON author.id=v.author_id
+        UNION ALL
+        SELECT le.event_type, le.user_id, actor.nickname, le.video_id, v.title,
+               v.author_id, author.nickname, le.occurred_at, NULL
+        FROM like_events le
+        JOIN users actor ON actor.id=le.user_id
+        JOIN videos v ON v.id=le.video_id
+        JOIN users author ON author.id=v.author_id
+        UNION ALL
+        SELECT fe.event_type, fe.user_id, actor.nickname, fe.video_id, v.title,
+               v.author_id, author.nickname, fe.occurred_at, NULL
+        FROM favorite_events fe
+        JOIN users actor ON actor.id=fe.user_id
+        JOIN videos v ON v.id=fe.video_id
+        JOIN users author ON author.id=v.author_id
+        UNION ALL
+        SELECT 'SHARE', s.user_id, actor.nickname, s.video_id, v.title,
+               v.author_id, author.nickname, s.shared_at, NULL
+        FROM share_records s
+        JOIN users actor ON actor.id=s.user_id
+        JOIN videos v ON v.id=s.video_id
+        JOIN users author ON author.id=v.author_id
+        UNION ALL
+        SELECT 'COMMENT', c.user_id, actor.nickname, c.video_id, v.title,
+               v.author_id, author.nickname, c.created_at, c.content
+        FROM comments c
+        JOIN users actor ON actor.id=c.user_id
+        JOIN videos v ON v.id=c.video_id
+        JOIN users author ON author.id=v.author_id
+        UNION ALL
+        SELECT 'COMMENT_DELETE', c.user_id, actor.nickname, c.video_id, v.title,
+               v.author_id, author.nickname, c.deleted_at, c.content
+        FROM comments c
+        JOIN users actor ON actor.id=c.user_id
+        JOIN videos v ON v.id=c.video_id
+        JOIN users author ON author.id=v.author_id
+        WHERE c.is_deleted=TRUE
+        UNION ALL
+        SELECT f.event_type, f.follower_id, actor.nickname, NULL, NULL,
+               f.followed_id, target.nickname, f.occurred_at, NULL
+        FROM follow_events f
+        JOIN users actor ON actor.id=f.follower_id
+        JOIN users target ON target.id=f.followed_id
+    </sql>
+
+    <sql id="behaviorWhere">
         <where>
-          <if test="userId != null">b.actor_user_id=#{userId}</if>
-          <if test="videoId != null">AND b.video_id=#{videoId}</if>
-          <if test="type != null and type != ''">AND b.behavior_type=#{type}</if>
-          <if test="start != null">AND b.occurred_at &gt;= #{start}</if>
-          <if test="end != null">AND b.occurred_at &lt;= #{end}</if>
+            <if test="userId != null">b.actor_user_id=#{userId}</if>
+            <if test="videoId != null">AND b.video_id=#{videoId}</if>
+            <if test="type != null and type != ''">AND b.behavior_type=#{type}</if>
+            <if test="start != null">AND b.occurred_at &gt;= #{start}</if>
+            <if test="end != null">AND b.occurred_at &lt;= #{end}</if>
         </where>
+    </sql>
+
+    <select id="query" resultType="map">
+        SELECT * FROM (<include refid="behaviorSource"/>) b
+        <include refid="behaviorWhere"/>
         ORDER BY b.occurred_at DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
-</mapper>
 
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM (<include refid="behaviorSource"/>) b
+        <include refid="behaviorWhere"/>
+    </select>
+</mapper>

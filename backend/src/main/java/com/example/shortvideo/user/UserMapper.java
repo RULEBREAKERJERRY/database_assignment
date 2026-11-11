@@ -35,5 +35,23 @@ public interface UserMapper {
             "FROM follow_relations f JOIN users u ON u.id=f.follower_id " +
             "WHERE f.followed_id=#{userId} ORDER BY f.followed_at DESC")
     List<Map<String, Object>> followers(Long userId);
+
+    /**
+     * 供首页「按作者筛选」下拉框检索用户：昵称或用户名模糊匹配，按粉丝数降序。
+     * 关联子查询只取 COUNT，不 JOIN 出粉丝明细，避免检索框一次拉回大量行。
+     */
+    @Select("<script>" +
+            "SELECT u.id, u.username, u.nickname, u.avatar_url, u.created_at, " +
+            "       (SELECT COUNT(*) FROM follow_relations f WHERE f.followed_id = u.id) AS follower_count " +
+            "FROM users u " +
+            "<where>" +
+            "  <if test=\"keyword != null and keyword != ''\">" +
+            "    (u.nickname LIKE CONCAT('%', #{keyword}, '%') OR u.username LIKE CONCAT('%', #{keyword}, '%'))" +
+            "  </if>" +
+            "</where> " +
+            "ORDER BY follower_count DESC, u.id ASC " +
+            "LIMIT #{limit}" +
+            "</script>")
+    List<Map<String, Object>> search(@Param("keyword") String keyword, @Param("limit") int limit);
 }
 

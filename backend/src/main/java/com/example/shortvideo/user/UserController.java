@@ -32,6 +32,14 @@ public class UserController {
         return ApiResponse.ok();
     }
 
+    @GetMapping("/api/users")
+    public ApiResponse<List<Map<String, Object>>> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "20") int limit) {
+        String kw = keyword == null ? null : keyword.trim();
+        return ApiResponse.ok(userMapper.search(kw, Math.min(Math.max(limit, 1), 50)));
+    }
+
     @GetMapping("/api/users/{id}/following")
     public ApiResponse<List<Map<String, Object>>> following(@PathVariable Long id) {
         return ApiResponse.ok(userMapper.following(id));
