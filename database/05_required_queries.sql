@@ -35,7 +35,7 @@ FROM (
     WHERE s.user_id = @user_id AND s.shared_at >= @start_time AND s.shared_at < @end_time
     UNION ALL
     SELECT IF(c.is_deleted, 'COMMENT_DELETED', 'COMMENT'), c.video_id, v.title,
-           u.nickname, c.created_at, c.content
+           u.nickname, IF(c.is_deleted, c.deleted_at, c.created_at) AS occurred_at, c.content
     FROM comments c
     JOIN videos v ON v.id = c.video_id
     JOIN users u ON u.id = v.author_id

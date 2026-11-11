@@ -7,9 +7,9 @@ ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 
 -- 测试账号密码均为 password；必须仅用于本地课程演示。
 INSERT INTO users(username, password_hash, nickname, bio, role) VALUES
-('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', '平台管理员', '课程设计管理员账号', 'ADMIN'),
-('alice', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Alice', '喜欢旅行和摄影', 'USER'),
-('bob', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Bob', '科技区创作者', 'USER')
+('admin', '$2a$10$Fl.ir1bX0.4hVtSFwXSkhuwzrK0EZQdI5dud1MpEwpDz6SFpmHRCi', '平台管理员', '课程设计管理员账号', 'ADMIN'),
+('alice', '$2a$10$Fl.ir1bX0.4hVtSFwXSkhuwzrK0EZQdI5dud1MpEwpDz6SFpmHRCi', 'Alice', '喜欢旅行和摄影', 'USER'),
+('bob', '$2a$10$Fl.ir1bX0.4hVtSFwXSkhuwzrK0EZQdI5dud1MpEwpDz6SFpmHRCi', 'Bob', '科技区创作者', 'USER')
 ON DUPLICATE KEY UPDATE nickname = VALUES(nickname), bio = VALUES(bio), role = VALUES(role);
 
 -- 可人工核验的少量业务样例；对应文件与许可说明见 storage/videos/README.md。

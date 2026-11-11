@@ -10,3 +10,7 @@ storage/videos/*
 !storage/videos/.gitkeep
 !storage/videos/sample-demo.mp4
 !storage/videos/README.md
+
+# 本地独立实验环境（MySQL 8.0.40 免安装包、数据目录、venv、浏览器验证脚本），不入库
+.local/
+.workbuddy-ai/

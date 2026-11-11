@@ -48,15 +48,20 @@ public class VideoService {
     public Long upload(String title, String description, Long categoryId, MultipartFile file) {
         validateMetadata(title, description, categoryId);
         if (file == null || file.isEmpty()) throw BusinessException.badRequest("请选择视频文件");
+        // 浏览器上传通常带 video/* 类型；部分客户端（curl、移动端、某些采集工具）会退化为
+        // application/octet-stream，此时以扩展名白名单作为补充判断，避免误拒合法视频。
         String contentType = file.getContentType();
-        if (contentType != null && !contentType.startsWith("video/")) {
-            throw BusinessException.badRequest("只能上传视频文件");
-        }
-
         String original = file.getOriginalFilename();
         String extension = original != null && original.lastIndexOf('.') >= 0
                 ? original.substring(original.lastIndexOf('.')).toLowerCase() : ".mp4";
-        if (!extension.matches("\\.(mp4|webm|mov|m4v|ogg)")) extension = ".mp4";
+        boolean extensionAllowed = extension.matches("\\.(mp4|webm|mov|m4v|ogg)");
+        boolean contentTypeAllowed = contentType == null
+                || contentType.startsWith("video/")
+                || ("application/octet-stream".equals(contentType) && extensionAllowed);
+        if (!contentTypeAllowed) {
+            throw BusinessException.badRequest("只能上传视频文件");
+        }
+        if (!extensionAllowed) extension = ".mp4";
         String storedName = UUID.randomUUID() + extension;
         Path directory = Paths.get(videoDirectory).toAbsolutePath().normalize();
         Path target = directory.resolve(storedName).normalize();
